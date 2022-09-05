@@ -38,7 +38,6 @@ type future[T any] struct {
 }
 
 func NewFuture[T any](ctx context.Context) Future[T] {
-
 	f := future[T]{
 		ctx:             ctx,
 		valueUpdate:     make(chan T),

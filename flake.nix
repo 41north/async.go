@@ -63,7 +63,6 @@
       formatter = pkgWithCategory "formatters";
       util = pkgWithCategory "utils";
     in {
-
       devShell = pkgs.devshell.mkShell {
         env = [
           # disable CGO for now
@@ -72,29 +71,27 @@
             value = "0";
           }
         ];
-        packages = with pkgs;
-          [
-            alejandra # https://github.com/kamadorueda/alejandra
-            delve # https://github.com/go-delve/delve
-            go_1_19 # https://go.dev/
-            gofumpt # https://github.com/mvdan/gofumpt
-            gotools # https://go.googlesource.com/tools
-            nodePackages.prettier # https://prettier.io/
-            treefmt # https://github.com/numtide/treefmt
-            websocat # https://github.com/vi/websocat
-          ];
+        packages = with pkgs; [
+          alejandra # https://github.com/kamadorueda/alejandra
+          delve # https://github.com/go-delve/delve
+          go_1_19 # https://go.dev/
+          gofumpt # https://github.com/mvdan/gofumpt
+          gotools # https://go.googlesource.com/tools
+          nodePackages.prettier # https://prettier.io/
+          treefmt # https://github.com/numtide/treefmt
+          websocat # https://github.com/vi/websocat
+        ];
 
-        commands = with pkgs;
-          [
-            (formatter alejandra)
-            (formatter gofumpt)
-            (formatter nodePackages.prettier)
+        commands = with pkgs; [
+          (formatter alejandra)
+          (formatter gofumpt)
+          (formatter nodePackages.prettier)
 
-            (linter golangci-lint)
+          (linter golangci-lint)
 
-            (util jq)
-            (util just)
-          ];
+          (util jq)
+          (util just)
+        ];
       };
     });
 }
