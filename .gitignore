@@ -1,0 +1,5 @@
+/gonix
+
+# ide files and directories
+.idea/
+*.iml
