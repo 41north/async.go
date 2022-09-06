@@ -1,0 +1,52 @@
+name: Go package
+
+on: [push]
+
+jobs:
+
+  lint:
+    runs-on: 'ubuntu-20.04'
+    name: Lint
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Nix
+        uses: cachix/install-nix-action@v17
+      - name: Nix Checks
+        run: nix flake check
+
+  build:
+    strategy:
+      matrix:
+        os: [ 'ubuntu-20.04', 'macos-latest', 'windows-latest' ]
+        go: [ '1.19' ]
+    runs-on: ${{ matrix.os }}
+    name: Build (Go ${{ matrix.go }}, OS ${{ matrix.os }})
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: 1.19
+      - name: Build
+        run: go build -v ./...
+      - name: Test
+        run: go test -race -bench='.+' -v ./...
+
+  coverage:
+    runs-on: 'ubuntu-20.04'
+    name: Coverage
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: 1.19
+      - name: Run coverage
+        run: go test -covermode=count -coverprofile=coverage.out -v ./...
+      - name: Convert coverage.out to coverage.lcov
+        uses: jandelgado/gcov2lcov-action@v1
+      - name: Coveralls
+        uses: coverallsapp/github-action@v1.1.2
+        with:
+          github-token: ${{ secrets.github_token }}
+          path-to-lcov: coverage.lcov
