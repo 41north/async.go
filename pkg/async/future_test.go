@@ -1,12 +1,110 @@
 package async
 
 import (
+	"context"
 	"fmt"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
 )
+
+func ExampleFuture_basic() {
+	// create a string future
+	f := NewFuture[string]()
+
+	// create a consumer channel
+	ch := f.Get()
+	go func() {
+		println(fmt.Sprintf("Value: %s", <-ch))
+	}()
+
+	// set the value
+	f.Set("hello")
+}
+
+func ExampleFuture_multiple() {
+	// create some futures
+	foo := NewFuture[string]()
+	bar := NewFuture[string]()
+
+	// compute in the background
+	go func() {
+		foo.Set("foo")
+	}()
+
+	go func() {
+		foo.Set("bar")
+	}()
+
+	// wait for their results
+	println(<-foo.Get())
+	println(<-bar.Get())
+}
+
+func ExampleFuture_select() {
+	// create some futures
+	foo := NewFuture[string]()
+	bar := NewFuture[string]()
+
+	// compute their values in the background
+	go func() {
+		foo.Set("foo")
+	}()
+
+	go func() {
+		bar.Set("bar")
+	}()
+
+	// create some consumer channels
+	fooCh := foo.Get()
+	barCh := bar.Get()
+
+	// wait with timeout
+
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	defer cancel()
+
+	var result []string
+	finished := false
+
+	for {
+		select {
+		case <-ctx.Done():
+			fmt.Println("timeout")
+			finished = true
+		case v, ok := <-fooCh:
+			if ok {
+				result = append(result, v)
+			}
+			finished = len(result) == 2
+		case v, ok := <-barCh:
+			if ok {
+				result = append(result, v)
+			}
+			finished = len(result) == 2
+		}
+
+		if finished {
+			// break out of the loop
+			break
+		}
+	}
+
+	// print all the results
+	fmt.Println(result)
+}
+
+func ExampleNewFutureImmediate() {
+	f := NewFutureImmediate("hello")
+	println(<-f.Get())
+}
+
+func TestFuture_Set(t *testing.T) {
+	f := NewFuture[string]()
+	assert.True(t, f.Set("foo"))
+	assert.False(t, f.Set("bar"))
+}
 
 func TestFuture_Get(t *testing.T) {
 	expected := "hello"
@@ -44,7 +142,7 @@ func TestFuture_GetAfterValueIsSet(t *testing.T) {
 
 func TestImmediateFuture_Get(t *testing.T) {
 	expected := "foo"
-	f := NewImmediateFuture[string](expected)
+	f := NewFutureImmediate[string](expected)
 	for i := 0; i < 1000; i++ {
 		assert.Equal(t, expected, <-f.Get())
 	}
@@ -52,9 +150,9 @@ func TestImmediateFuture_Get(t *testing.T) {
 
 func TestImmediateFuture_Set(t *testing.T) {
 	defer func() {
-		assert.Equal(t, recover(), PanicSetOnImmediateFuture)
+		assert.Equal(t, recover(), panicSetOnImmediateFuture)
 	}()
-	f := NewImmediateFuture[string]("foo")
+	f := NewFutureImmediate[string]("foo")
 	f.Set("bar")
 }
 

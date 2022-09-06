@@ -7,6 +7,18 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func ExampleNewResult() {
+	result := NewResult[string]("success")
+	v, _ := result.Unwrap()
+	println(v)
+}
+
+func ExampleNewResultErr() {
+	result := NewResultErr[string](errors.New("failure"))
+	_, err := result.Unwrap()
+	panic(err)
+}
+
 func TestNewResult(t *testing.T) {
 	r := NewResult[string]("hello")
 	value, err := r.Unwrap()

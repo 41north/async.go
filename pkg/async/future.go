@@ -5,7 +5,7 @@ import (
 )
 
 const (
-	PanicSetOnImmediateFuture = "you cannot set a value on an immediate future"
+	panicSetOnImmediateFuture = "you cannot set a value on an immediate future"
 )
 
 type immediateFuture[T any] struct {
@@ -19,10 +19,11 @@ func (f immediateFuture[T]) Get() <-chan T {
 }
 
 func (f immediateFuture[T]) Set(_ T) bool {
-	panic(PanicSetOnImmediateFuture)
+	panic(panicSetOnImmediateFuture)
 }
 
-func NewImmediateFuture[T any](value T) Future[T] {
+// NewFutureImmediate creates a future of type T that has a value that is already set.
+func NewFutureImmediate[T any](value T) Future[T] {
 	return immediateFuture[T]{value: value}
 }
 
@@ -33,6 +34,7 @@ type future[T any] struct {
 	publishedIdx atomic.Int32
 }
 
+// NewFuture creates a new future of type T.
 func NewFuture[T any]() Future[T] {
 	f := future[T]{}
 	f.consumers.Store(&[]chan T{}) // init the consumers to an empty list
