@@ -1,7 +1,6 @@
 package async
 
 import (
-	"context"
 	"fmt"
 	"testing"
 	"time"
@@ -10,11 +9,8 @@ import (
 )
 
 func TestFuture_Get(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
-	defer cancel()
-
 	expected := "hello"
-	f := NewFuture[string](ctx)
+	f := NewFuture[string]()
 
 	var getters []<-chan string
 	for i := 0; i < 1000; i++ {
@@ -32,9 +28,7 @@ func TestFuture_Get(t *testing.T) {
 }
 
 func TestFuture_GetAfterValueIsSet(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
-	defer cancel()
-	f := NewFuture[string](ctx)
+	f := NewFuture[string]()
 
 	expected := "hello"
 	f.Set(expected)
@@ -60,14 +54,11 @@ func TestImmediateFuture_Set(t *testing.T) {
 }
 
 func BenchmarkFuture(b *testing.B) {
-	ctx, cancel := context.WithTimeout(context.Background(), 120*time.Second)
-	defer cancel()
-
 	count := 100
 
 	futures := make([]Future[string], count)
 	for i := 0; i < count; i++ {
-		futures[i] = NewFuture[string](ctx)
+		futures[i] = NewFuture[string]()
 		go func(idx int) {
 			<-time.After(500 * time.Millisecond)
 			futures[idx].Set(fmt.Sprintf("Result_%d", idx))
@@ -80,10 +71,7 @@ func BenchmarkFuture(b *testing.B) {
 }
 
 func BenchmarkFuture_Get(b *testing.B) {
-	ctx, cancel := context.WithTimeout(context.Background(), 120*time.Second)
-	defer cancel()
-
-	f := NewFuture[string](ctx)
+	f := NewFuture[string]()
 	go func() {
 		f.Set("hello")
 	}()

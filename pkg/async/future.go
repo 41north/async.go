@@ -1,7 +1,6 @@
 package async
 
 import (
-	"context"
 	"sync/atomic"
 )
 
@@ -28,88 +27,79 @@ func NewImmediateFuture[T any](value T) Future[T] {
 }
 
 type future[T any] struct {
-	ctx context.Context
+	value atomic.Pointer[T]
 
-	value       atomic.Pointer[T]
-	valueUpdate chan T
-
-	listeners       atomic.Pointer[[]chan T]
-	listenersUpdate chan interface{}
+	consumers    atomic.Pointer[[]chan T]
+	publishedIdx atomic.Int32
 }
 
-func NewFuture[T any](ctx context.Context) Future[T] {
-	f := future[T]{
-		ctx:             ctx,
-		valueUpdate:     make(chan T),
-		listenersUpdate: make(chan interface{}, 1),
-	}
-	f.listeners.Store(&[]chan T{}) // init the listeners to an empty list
-	go f.publishValue()            // start the publishing routine
+func NewFuture[T any]() Future[T] {
+	f := future[T]{}
+	f.consumers.Store(&[]chan T{}) // init the consumers to an empty list
 	return &f
 }
 
-func (f *future[T]) publishValue() {
-	var value *T
-	publishedIdx := -1
-
-	publishToListeners := func() {
-		listeners := *f.listeners.Load()
-		for i := publishedIdx + 1; i < len(listeners); i++ {
-			listeners[i] <- *value
-			publishedIdx = i
-		}
-	}
-
-	// keep watching for additions to the listeners slice and publish the value to any new additions
-	for {
-		select {
-
-		case <-f.ctx.Done():
-			return // stop trying to publish
-
-		case v, ok := <-f.valueUpdate:
-			if !ok {
-				return
-			}
-			value = &v
-			publishToListeners()
-
-		case _, ok := <-f.listenersUpdate:
-			if !ok || value == nil {
-				continue
-			}
-			publishToListeners()
-		}
-	}
-}
-
 func (f *future[T]) Get() <-chan T {
-	return f.addListener()
+	defer f.tryNotifyConsumers()
+	return f.addConsumer()
 }
 
-func (f *future[T]) addListener() <-chan T {
-	ch := make(chan T, 1) // we do not want rendezvous here as it will block the publishing routine
+func (f *future[T]) addConsumer() <-chan T {
+	// we do not want rendezvous here as it will block the caller of tryNotifyConsumers()
+	ch := make(chan T, 1)
+
 	for {
-		oldListenersPtr := f.listeners.Load()
+		oldListenersPtr := f.consumers.Load()
 		oldListeners := *oldListenersPtr
 		newListeners := make([]chan T, len(oldListeners)+1)
 
 		copy(newListeners, oldListeners)
 		newListeners[len(oldListeners)] = ch
 
-		if f.listeners.CompareAndSwap(oldListenersPtr, &newListeners) {
-			f.listenersUpdate <- struct{}{}
+		if f.consumers.CompareAndSwap(oldListenersPtr, &newListeners) {
 			break
 		}
 	}
 	return ch
 }
 
+func (f *future[T]) tryNotifyConsumers() {
+	value := f.value.Load()
+
+	// check if the value has been set
+	if value == nil {
+		return
+	}
+
+	// determine if there are any new consumers that have not been notified
+	consumers := *f.consumers.Load()
+	consumerCount := len(consumers)
+
+	publishedIdx := f.publishedIdx.Load()
+	newConsumers := consumers[publishedIdx:consumerCount]
+
+	if len(newConsumers) == 0 {
+		// no new consumers
+		return
+	}
+
+	if !f.publishedIdx.CompareAndSwap(publishedIdx, int32(consumerCount)) {
+		// concurrency guard to prevent duplicate publications
+		return
+	}
+
+	// notify the new consumers
+	go func() {
+		for _, consumer := range newConsumers {
+			consumer <- *value
+		}
+	}()
+}
+
 func (f *future[T]) Set(value T) bool {
 	ok := f.value.CompareAndSwap(nil, &value)
 	if ok {
-		// wake up the publishing routine
-		f.valueUpdate <- value
+		f.tryNotifyConsumers()
 	}
 	return ok
 }
