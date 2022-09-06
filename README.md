@@ -4,6 +4,11 @@
 [![Coverage Status](https://coveralls.io/repos/github/41north/go-async/badge.svg?branch=feat/readme)](https://coveralls.io/github/41north/go-async?branch=feat/readme)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
+Status: _EXPERIMENTAL_
+
+This library is primarily intended as a directed learning exercise and eventual collection of utilities and patterns
+for working asynchronously in Go.
+
 ## Documentation
 
 [![GoDoc](https://img.shields.io/badge/godoc-reference-blue.svg)](http://godoc.org/github.com/41north/go-async)
