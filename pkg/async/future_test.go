@@ -23,7 +23,12 @@ func TestFuture_Get(t *testing.T) {
 	}()
 
 	for _, getter := range getters {
-		assert.Equal(t, expected, <-getter)
+		v, ok := <-getter
+		assert.True(t, ok, "channel was closed")
+		assert.Equal(t, expected, v)
+
+		_, ok = <-getter
+		assert.False(t, ok, "channel should have been closed")
 	}
 }
 
