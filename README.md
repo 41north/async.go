@@ -29,7 +29,7 @@ $ go get -u github.com/41north/go-async
 Add this import line to the file you're working in:
 
 ```Go
-import "github.com/41north/go-async/pkg/async"
+import "github.com/41north/go-async"
 ```
 
 A basic example:
