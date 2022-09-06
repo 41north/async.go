@@ -64,13 +64,6 @@
       util = pkgWithCategory "utils";
     in {
       devShell = pkgs.devshell.mkShell {
-        env = [
-          # disable CGO for now
-          {
-            name = "CGO_ENABLED";
-            value = "0";
-          }
-        ];
         packages = with pkgs; [
           alejandra # https://github.com/kamadorueda/alejandra
           delve # https://github.com/go-delve/delve
