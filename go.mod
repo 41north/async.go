@@ -1,4 +1,4 @@
-module github.com/nix-community/go-nix
+module github.com/41north/go-async
 
 go 1.19
 
