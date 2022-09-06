@@ -57,23 +57,41 @@
 
       pkgWithCategory = category: package: {inherit package category;};
 
+      linters = with pkgs; [
+        alejandra # https://github.com/kamadorueda/alejandra
+        gofumpt # https://github.com/mvdan/gofumpt
+        nodePackages.prettier # https://prettier.io/
+        treefmt # https://github.com/numtide/treefmt
+      ];
+
       # devshell command categories
       dev = pkgWithCategory "dev";
       linter = pkgWithCategory "linters";
       formatter = pkgWithCategory "formatters";
       util = pkgWithCategory "utils";
     in {
+      checks = {
+        format =
+          pkgs.runCommandNoCC "treefmt" {
+            nativeBuildInputs = linters;
+          } ''
+            # keep timestamps so that treefmt is able to detect mtime changes
+            cp --no-preserve=mode --preserve=timestamps -r ${self} source
+            cd source
+            HOME=$TMPDIR treefmt --fail-on-change
+            touch $out
+          '';
+      };
+
       devShell = pkgs.devshell.mkShell {
-        packages = with pkgs; [
-          alejandra # https://github.com/kamadorueda/alejandra
-          delve # https://github.com/go-delve/delve
-          go_1_19 # https://go.dev/
-          gofumpt # https://github.com/mvdan/gofumpt
-          gotools # https://go.googlesource.com/tools
-          nodePackages.prettier # https://prettier.io/
-          treefmt # https://github.com/numtide/treefmt
-          websocat # https://github.com/vi/websocat
-        ];
+        packages = with pkgs;
+          [
+            delve # https://github.com/go-delve/delve
+            go_1_19 # https://go.dev/
+            gotools # https://go.googlesource.com/tools
+            websocat # https://github.com/vi/websocat
+          ]
+          ++ linters;
 
         commands = with pkgs; [
           (formatter alejandra)
