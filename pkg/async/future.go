@@ -92,6 +92,7 @@ func (f *future[T]) tryNotifyConsumers() {
 	go func() {
 		for _, consumer := range newConsumers {
 			consumer <- *value
+			close(consumer)
 		}
 	}()
 }
