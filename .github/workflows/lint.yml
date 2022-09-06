@@ -9,6 +9,6 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Set up Nix
-        uses: cachix/install-nix-action@v21
+        uses: cachix/install-nix-action@v17
       - name: Nix Checks
         run: nix flake check
