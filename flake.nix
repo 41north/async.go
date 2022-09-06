@@ -34,15 +34,9 @@
     pre-commit-hooks,
     ...
   } @ inputs: let
-    inherit (flake-utils.lib) eachSystem flattenTree mkApp;
+    inherit (flake-utils.lib) eachDefaultSystem flattenTree mkApp;
   in
-    eachSystem
-    [
-      "aarch64-linux"
-      "aarch64-darwin"
-      "x86_64-darwin"
-      "x86_64-linux"
-    ]
+    eachDefaultSystem
     (system: let
       pkgs = import nixpkgs {
         inherit system;
@@ -54,6 +48,7 @@
       inherit (pkgs) dockerTools buildGoModule;
       inherit (pkgs.stdenv) isLinux;
       inherit (pkgs.lib) lists fakeSha256 licenses platforms;
+      inherit (pkgs.devshell) mkShell;
 
       pkgWithCategory = category: package: {inherit package category;};
 
@@ -83,7 +78,7 @@
           '';
       };
 
-      devShell = pkgs.devshell.mkShell {
+      devShells.default = mkShell {
         packages = with pkgs;
           [
             delve # https://github.com/go-delve/delve
