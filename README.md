@@ -53,3 +53,7 @@ There are more examples available in the go doc.
 ## License
 
 Go-async is licensed under the [Apache 2.0 License](LICENSE)
+
+## Contact
+
+If you want to get in touch drop us an email at [hello@41north.dev](mailto:hello@41north.dev)
