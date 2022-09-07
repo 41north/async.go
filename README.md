@@ -27,15 +27,15 @@ http://localhost:6060/pkg/github.com/41north/go-async
 $ go get -u github.com/41north/go-async
 ```
 
-## Quick Start
-
-### Future
-
 Add this import line to the file you're working in:
 
 ```Go
 import "github.com/41north/go-async"
 ```
+
+## Quick Start
+
+### Future
 
 A basic example:
 
@@ -51,6 +51,46 @@ go func() {
 
 // set the value
 f.Set("hello")
+```
+
+### Counting Semaphore
+
+A basic example:
+
+```go
+// we create an input and output channel for work needing to be done
+inCh := make(chan string, 128)
+outCh := make(chan int, 128)
+
+// we want a max of 10 in-flight processes
+s := NewCountingSemaphore(10)
+
+// we create more workers than tokens available
+for i := 0; i < 100; i++ {
+	go func() {
+		for {
+			// acquire a token, waiting until one is available
+			s.Acquire(1)
+
+			// consume from the input channel
+			v, ok := <-inCh
+			if !ok {
+				// channel was closed
+				return
+			}
+
+			// do some work and produce an output value
+			outCh <- len(v)
+
+			// you need to be careful about releasing, if possible perform it with defer
+			s.Release(1)
+		}
+	}()
+}
+
+// generate some work and put it into the work queue
+// ...
+// ...
 ```
 
 There are more examples available in the go doc.
