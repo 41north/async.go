@@ -8,7 +8,7 @@ import (
 )
 
 func ExampleNewResult() {
-	result := NewResult[string]("success")
+	result := NewResultValue[string]("success")
 	v, _ := result.Unwrap()
 	println(v)
 }
@@ -20,7 +20,20 @@ func ExampleNewResultErr() {
 }
 
 func TestNewResult(t *testing.T) {
-	r := NewResult[string]("hello")
+	r := NewResult[string]("hello", nil)
+	value, err := r.Unwrap()
+	assert.Equal(t, "hello", value)
+	assert.Nil(t, err)
+
+	expected := errors.New("something bad happened")
+	r = NewResult[string]("", expected)
+	value, err = r.Unwrap()
+	assert.Equal(t, "", value)
+	assert.Equal(t, expected, err)
+}
+
+func TestNewResultValue(t *testing.T) {
+	r := NewResultValue[string]("hello")
 	value, err := r.Unwrap()
 	assert.Equal(t, "hello", value)
 	assert.Nil(t, err)
