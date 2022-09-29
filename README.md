@@ -1,7 +1,7 @@
 # go-async
 
 ![Build](https://github.com/41north/go-async/actions/workflows/ci.yml/badge.svg)
-[![Coverage Status](https://coveralls.io/repos/github/41north/go-async/badge.svg?branch=feat/readme)](https://coveralls.io/github/41north/go-async?branch=feat/readme)
+[![Coverage Status](https://coveralls.io/repos/github/41north/go-async/badge.svg)](https://coveralls.io/github/41north/go-async)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
 Status: _EXPERIMENTAL_
