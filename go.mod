@@ -1,4 +1,4 @@
-module github.com/41north/go-async
+module github.com/41north/async.go
 
 go 1.19
 
