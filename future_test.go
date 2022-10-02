@@ -1,4 +1,4 @@
-package async
+package async_test
 
 import (
 	"context"
@@ -6,12 +6,14 @@ import (
 	"testing"
 	"time"
 
+	"github.com/41north/async.go"
+
 	"github.com/stretchr/testify/assert"
 )
 
 func ExampleFuture_basic() {
 	// create a string future
-	f := NewFuture[string]()
+	f := async.NewFuture[string]()
 
 	// create a consumer channel
 	ch := f.Get()
@@ -25,8 +27,8 @@ func ExampleFuture_basic() {
 
 func ExampleFuture_multiple() {
 	// create some futures
-	foo := NewFuture[string]()
-	bar := NewFuture[string]()
+	foo := async.NewFuture[string]()
+	bar := async.NewFuture[string]()
 
 	// compute in the background
 	go func() {
@@ -44,8 +46,8 @@ func ExampleFuture_multiple() {
 
 func ExampleFuture_select() {
 	// create some futures
-	foo := NewFuture[string]()
-	bar := NewFuture[string]()
+	foo := async.NewFuture[string]()
+	bar := async.NewFuture[string]()
 
 	// compute their values in the background
 	go func() {
@@ -96,19 +98,19 @@ func ExampleFuture_select() {
 }
 
 func ExampleNewFutureImmediate() {
-	f := NewFutureImmediate("hello")
+	f := async.NewFutureImmediate("hello")
 	println(<-f.Get())
 }
 
 func TestFuture_Set(t *testing.T) {
-	f := NewFuture[string]()
+	f := async.NewFuture[string]()
 	assert.True(t, f.Set("foo"))
 	assert.False(t, f.Set("bar"))
 }
 
 func TestFuture_Get(t *testing.T) {
 	expected := "hello"
-	f := NewFuture[string]()
+	f := async.NewFuture[string]()
 
 	var getters []<-chan string
 	for i := 0; i < 1000; i++ {
@@ -131,7 +133,7 @@ func TestFuture_Get(t *testing.T) {
 }
 
 func TestFuture_GetAfterValueIsSet(t *testing.T) {
-	f := NewFuture[string]()
+	f := async.NewFuture[string]()
 
 	expected := "hello"
 	f.Set(expected)
@@ -142,7 +144,7 @@ func TestFuture_GetAfterValueIsSet(t *testing.T) {
 
 func TestImmediateFuture_Get(t *testing.T) {
 	expected := "foo"
-	f := NewFutureImmediate[string](expected)
+	f := async.NewFutureImmediate[string](expected)
 	for i := 0; i < 1000; i++ {
 		assert.Equal(t, expected, <-f.Get())
 	}
@@ -150,18 +152,18 @@ func TestImmediateFuture_Get(t *testing.T) {
 
 func TestImmediateFuture_Set(t *testing.T) {
 	defer func() {
-		assert.Equal(t, recover(), panicSetOnImmediateFuture)
+		assert.Equal(t, recover(), async.PanicSetOnImmediateFuture)
 	}()
-	f := NewFutureImmediate[string]("foo")
+	f := async.NewFutureImmediate[string]("foo")
 	f.Set("bar")
 }
 
 func BenchmarkFuture(b *testing.B) {
 	count := 100
 
-	futures := make([]Future[string], count)
+	futures := make([]async.Future[string], count)
 	for i := 0; i < count; i++ {
-		futures[i] = NewFuture[string]()
+		futures[i] = async.NewFuture[string]()
 		go func(idx int) {
 			<-time.After(500 * time.Millisecond)
 			futures[idx].Set(fmt.Sprintf("Result_%d", idx))
@@ -174,7 +176,7 @@ func BenchmarkFuture(b *testing.B) {
 }
 
 func BenchmarkFuture_Get(b *testing.B) {
-	f := NewFuture[string]()
+	f := async.NewFuture[string]()
 	go func() {
 		f.Set("hello")
 	}()
