@@ -1,8 +1,10 @@
-package async
+package async_test
 
 import (
 	"sync"
 	"testing"
+
+	"github.com/41north/async.go"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/tidwall/btree"
@@ -14,7 +16,7 @@ func ExampleCountingSemaphore() {
 	outCh := make(chan int, 128)
 
 	// we want a max of 10 in-flight processes
-	s := NewCountingSemaphore(10)
+	s := async.NewCountingSemaphore(10)
 
 	// we create more workers than tokens available
 	for i := 0; i < 100; i++ {
@@ -45,7 +47,7 @@ func ExampleCountingSemaphore() {
 }
 
 func TestCountingSemaphore_TryAcquireAndRelease(t *testing.T) {
-	s := NewCountingSemaphore(2)
+	s := async.NewCountingSemaphore(2)
 
 	assert.Equal(t, int32(2), s.Size())
 
@@ -74,7 +76,7 @@ func TestCountingSemaphore_Pipeline(t *testing.T) {
 	workCount := 1000000
 	workerCount := 100
 
-	semaphore := NewCountingSemaphore(32)
+	semaphore := async.NewCountingSemaphore(32)
 
 	inCh := make(chan int, 1024)
 	outCh := make(chan int, 1024)
